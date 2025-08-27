@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.venv
+.venv_pdf_locker/
+pip-wheel-metadata/
+build/
+dist/
+*.spec
+
+# IDEs / Editors
+.vscode/
+.idea/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
