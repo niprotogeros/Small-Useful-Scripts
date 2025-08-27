@@ -209,7 +209,7 @@ class Main(QWidget):
                 QLineEdit.Normal if checked else QLineEdit.Password
             )
         )
-        # Owner password eye button (FIX: ensure correct class name QLineEdit.Password)
+        # Owner password eye button
         self.owner_pw_eye_btn.toggled.connect(
             lambda checked: self.owner_pw_edit.setEchoMode(
                 QLineEdit.Normal if checked else QLineEdit.Password
