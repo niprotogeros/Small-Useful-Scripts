@@ -9,9 +9,9 @@ Set WshShell = CreateObject("WScript.Shell")
 Set FSO      = CreateObject("Scripting.FileSystemObject")
 
 ' === Paths (edit if needed) ===
-target  = "C:\Python_Scripts\Run_PDF_Locker.bat"
-workdir = "C:\Python_Scripts"
-icon    = "C:\Python_Scripts\pdf-locker.ico"
+target  = "C:\Python_Scripts\pdf-locker\Run_PDF_Locker.bat"
+workdir = "C:\Python_Scripts\pdf-locker"
+icon    = "C:\Python_Scripts\pdf-locker\pdf-locker.ico"
 ' ===============================
 
 If Not FSO.FileExists(target) Then
