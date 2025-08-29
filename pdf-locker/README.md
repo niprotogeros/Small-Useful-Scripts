@@ -10,6 +10,9 @@ Built with **PySide6 (Qt)** and **pikepdf** (wrapper around qpdf).
 - Eye buttons next to both password fields to **show/hide** the passwords.
 - Included **padlock icon** (`pdf-locker.ico`) and **shortcut creator** (`Create_PDF_Locker_Shortcut.vbs`).
 
+## Prerequisites:
+- Python 3.8 or higher
+
 ## Quick Start (Windows 10/11)
 
 1. Extract this folder to `C:\Python_Scripts\pdf-locker\`.
