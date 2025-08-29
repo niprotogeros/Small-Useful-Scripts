@@ -23,8 +23,6 @@ IESVE-Daylight-to-Excel/
 └─ README.md
 ```
 
-> **Note:** The Python script name is kept as originally provided, including the `Dayilght` spelling.
-
 ## Requirements
 - Windows 10/11 (64-bit)
 - Python **3.10+ (64-bit)** from python.org
