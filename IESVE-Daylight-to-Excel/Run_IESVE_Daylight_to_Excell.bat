@@ -1,66 +1,79 @@
 @echo off
-setlocal EnableExtensions
+setlocal EnableExtensions EnableDelayedExpansion
 
-REM ------------------------------------------------------------------
-REM  IESVE Daylight Metrics → Excel launcher
-REM  - Creates a local virtual environment on first run
-REM  - Installs required packages
-REM  - Launches the GUI
-REM ------------------------------------------------------------------
+REM ==================================================================
+REM  IESVE Daylight Metrics -> Excel : FINAL (Same-Window, DIAG-style)
+REM  - No 'start', no 'pythonw'.
+REM  - Runs in this window so it cannot auto-close.
+REM  - Creates/uses .venv_daylight_excel and installs deps.
+REM ==================================================================
 
-REM Resolve script directory (with trailing backslash)
-set "SCRIPT_DIR=%~dp0"
-set "VENV=%SCRIPT_DIR%.venv"
-set "PYEXE=%VENV%\Scripts\python.exe"
-set "REQUIREMENTS=%SCRIPT_DIR%requirements.txt"
-set "APP=%SCRIPT_DIR%IESVE_Dayilght_Metrics_to_Excel.py"
+REM Change directory to the location of this batch file
+cd /d "%~dp0"
 
-if not exist "%APP%" (
-  echo [ERROR] Could not find "%APP%". Make sure the .py file is in the same folder.
-  pause
-  exit /b 1
+set "SCRIPT_NAME=IESVE_Dayilght_Metrics_to_Excel.py"
+set "SCRIPT_PATH=%~dp0%SCRIPT_NAME%"
+set "VENV_PATH=%~dp0.venv_daylight_excel"
+set "PY_EXE=%VENV_PATH%\Scripts\python.exe"
+set "REQ_FILE=%~dp0requirements.txt"
+
+echo [INFO] Working Directory: "%CD%"
+echo [INFO] Script Path: "%SCRIPT_PATH%"
+echo [INFO] Virtual Env Path: "%VENV_PATH%"
+
+if not exist "%SCRIPT_PATH%" (
+  echo [ERROR] Script not found: "%SCRIPT_PATH%"
+  goto :END
 )
 
-REM Create venv if needed
-if not exist "%PYEXE%" (
-  echo Creating virtual environment...
-  where py >nul 2>nul
-  if %ERRORLEVEL% EQU 0 (
-    py -3 -m venv "%VENV%"
-  ) else (
-    echo Python Launcher (py) not found. Trying "python"...
-    where python >nul 2>nul || (
-      echo [ERROR] Python 3.10+ is not installed or not on PATH.
-      echo Please install from https://www.python.org/downloads/ (check "Add python.exe to PATH") and re-run.
-      pause
-      exit /b 1
-    )
-    python -m venv "%VENV%"
-  )
-  if not exist "%PYEXE%" (
-    echo [ERROR] Failed to create virtual environment.
-    pause
-    exit /b 1
-  )
-  echo Upgrading pip...
-  "%PYEXE%" -m pip install --upgrade pip
-  echo Installing requirements...
-  if exist "%REQUIREMENTS%" (
-    "%PYEXE%" -m pip install -r "%REQUIREMENTS%"
-  ) else (
-    echo [WARN] requirements.txt not found. Installing base packages...
-    "%PYEXE%" -m pip install pandas openpyxl
+REM ---- Find a suitable Python interpreter ----
+set "PY_CMD="
+where py >nul 2>nul && set "PY_CMD=py -3"
+if not defined PY_CMD ( where python >nul 2>nul && set "PY_CMD=python" )
+
+if not defined PY_CMD (
+  echo [ERROR] Python 3.10+ not found on your system's PATH.
+  echo [ERROR] Please install Python from python.org and ensure "Add to PATH" is checked during installation.
+  goto :END
+)
+echo [INFO] Found Python launcher: %PY_CMD%
+
+REM ---- Create virtual environment if it doesn't exist ----
+if not exist "%PY_EXE%" (
+  echo [INFO] Creating virtual environment...
+  %PY_CMD% -m venv "%VENV_PATH%"
+  if %errorlevel% neq 0 (
+    echo [ERROR] Failed to create the virtual environment.
+    goto :END
   )
 )
 
-echo Launching IESVE Daylight Metrics → Excel...
-"%PYEXE%" "%APP%"
-set "RC=%ERRORLEVEL%"
-if not "%RC%"=="0" (
-  echo.
-  echo [INFO] The script exited with code %RC%.
-  echo Press any key to close...
-  pause >nul
+REM ---- Install/update Python packages ----
+echo [INFO] Installing/updating required packages...
+if exist "%REQ_FILE%" (
+  "%PY_EXE%" -m pip install --upgrade pip
+  "%PY_EXE%" -m pip install -r "%REQ_FILE%"
+) else (
+  echo [INFO] 'requirements.txt' not found. Installing base packages...
+  "%PY_EXE%" -m pip install --upgrade pip
+  "%PY_EXE%" -m pip install pandas openpyxl
 )
 
+if %errorlevel% neq 0 (
+  echo [ERROR] Failed to install Python packages. Check your internet connection and package names.
+  goto :END
+)
+
+echo [INFO] Launching the Python application...
+"%PY_EXE%" -u "%SCRIPT_PATH%"
+set "RC=%errorlevel%"
+echo [INFO] Python script finished with exit code: %RC%
+
+:END
+echo.
+echo -------------------------------------------------------------
+echo Finished. Please review any messages above.
+echo Press any key to close this window...
+echo -------------------------------------------------------------
+pause >nul
 endlocal
