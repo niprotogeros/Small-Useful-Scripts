@@ -6,82 +6,79 @@ import pandas as pd
 
 # --- GUI Functions ---
 
-def get_radiance_folder():
+def get_radiance_folder(root):
     """Opens a dialog to ask the user for the Radiance results folder."""
-    root = tk.Tk()
-    root.withdraw()
-    folder_path = filedialog.askdirectory(title="Select Radiance Results Folder")
-    root.destroy()
+    folder_path = filedialog.askdirectory(title="Select Radiance Results Folder", parent=root)
     if not folder_path:
-        messagebox.showinfo("Info", "No folder selected. Exiting.")
+        messagebox.showinfo("Info", "No folder selected. Exiting.", parent=root)
         return None
     return folder_path
 
-def select_metric_from_list(metric_types):
+def select_metric_from_list(metric_types, root):
     """Presents a dialog for the user to select a metric type."""
     if not metric_types:
-        messagebox.showinfo("Info", "No .wpd files or metric types found in the folder.")
+        messagebox.showinfo("Info", "No .wpd files or metric types found in the folder.", parent=root)
         return None
 
-    dialog_root = tk.Tk()
-    dialog_root.title("Select Metric Type")
-    dialog_root.geometry("300x400")
+    dialog = tk.Toplevel(root)
+    dialog.title("Select Metric Type")
+    dialog.geometry("300x400")
 
-    Label(dialog_root, text="Select the daylight metric to export:").pack(pady=10)
-    var = StringVar(dialog_root)
+    Label(dialog, text="Select the daylight metric to export:").pack(pady=10)
+    var = StringVar(dialog)
     if metric_types:
         var.set(metric_types[0])
 
     for metric_type in metric_types:
-        rb = Radiobutton(dialog_root, text=metric_type, variable=var, value=metric_type)
+        rb = Radiobutton(dialog, text=metric_type, variable=var, value=metric_type)
         rb.pack(anchor=W, padx=20)
 
     selected_metric = None
     def on_ok():
         nonlocal selected_metric
         selected_metric = var.get()
-        dialog_root.destroy()
+        dialog.destroy()
     def on_cancel():
-        dialog_root.destroy()
+        dialog.destroy()
 
-    Button(dialog_root, text="OK", command=on_ok).pack(side=LEFT, padx=(20,10), pady=20)
-    Button(dialog_root, text="Cancel", command=on_cancel).pack(side=RIGHT, padx=(10,20), pady=20)
-    dialog_root.wait_window()
+    Button(dialog, text="OK", command=on_ok).pack(side=LEFT, padx=(20,10), pady=20)
+    Button(dialog, text="Cancel", command=on_cancel).pack(side=RIGHT, padx=(10,20), pady=20)
+    dialog.wait_window()
 
     if not selected_metric:
-        messagebox.showinfo("Info", "No metric selected. Exiting.")
+        messagebox.showinfo("Info", "No metric selected. Exiting.", parent=root)
         return None
     return selected_metric
 
-def select_area_type():
+def select_area_type(root):
     """Presents a dialog for the user to select Full Area or AOI."""
-    dialog_root = tk.Tk()
-    dialog_root.title("Select Area Type")
-    dialog_root.geometry("300x200")
+    dialog = tk.Toplevel(root)
+    dialog.title("Select Area Type")
+    dialog.geometry("300x200")
 
-    Label(dialog_root, text="Select statistics to extract:", justify=LEFT).pack(pady=10, padx=20, anchor=W)
-    Label(dialog_root, text="(AOI stats depend on simulation setup)", font=('Helvetica', 8), justify=LEFT).pack(padx=20, anchor=W)
+    Label(dialog, text="Select statistics to extract:", justify=LEFT).pack(pady=10, padx=20, anchor=W)
+    Label(dialog, text="(AOI stats depend on simulation setup)", font=('Helvetica', 8), justify=LEFT).pack(padx=20, anchor=W)
 
-    var = StringVar(dialog_root)
+    var = StringVar(dialog)
     var.set("Full") # Default to Full Area
 
-    Radiobutton(dialog_root, text="Full Area", variable=var, value="Full").pack(anchor=W, padx=40, pady=5)
-    Radiobutton(dialog_root, text="Area Of Interest (AOI)", variable=var, value="AOI").pack(anchor=W, padx=40, pady=5)
+    Radiobutton(dialog, text="Full Area", variable=var, value="Full").pack(anchor=W, padx=40, pady=5)
+    Radiobutton(dialog, text="Area Of Interest (AOI)", variable=var, value="AOI").pack(anchor=W, padx=40, pady=5)
 
     selected_area = None
     def on_ok():
         nonlocal selected_area
         selected_area = var.get()
-        dialog_root.destroy()
+        dialog.destroy()
     def on_cancel():
-        dialog_root.destroy()
+        dialog.destroy()
 
-    Button(dialog_root, text="OK", command=on_ok).pack(side=LEFT, padx=(20,10), pady=20)
-    Button(dialog_root, text="Cancel", command=on_cancel).pack(side=RIGHT, padx=(10,20), pady=20)
-    dialog_root.wait_window()
+    Button(dialog, text="OK", command=on_ok).pack(side=LEFT, padx=(20,10), pady=20)
+    Button(dialog, text="Cancel", command=on_cancel).pack(side=RIGHT, padx=(10,20), pady=20)
+    dialog.wait_window()
 
     if not selected_area:
-        messagebox.showinfo("Info", "No area type selected. Exiting.")
+        messagebox.showinfo("Info", "No area type selected. Exiting.", parent=root)
         return None
     return selected_area
 
@@ -217,17 +214,29 @@ def parse_wpd_file(file_path, expected_metric_type_from_filename, area_choice):
 
 def main():
     """Main function to orchestrate the process."""
-    radiance_folder = get_radiance_folder()
-    if not radiance_folder: return
+    # Create a single root window for the entire application
+    root = tk.Tk()
+    root.withdraw()  # Hide the main window
+
+    radiance_folder = get_radiance_folder(root)
+    if not radiance_folder:
+        root.destroy()
+        return
 
     available_metrics = get_available_metrics_from_files(radiance_folder)
-    if not available_metrics: return
+    if not available_metrics:
+        root.destroy()
+        return
 
-    selected_metric_type = select_metric_from_list(available_metrics)
-    if not selected_metric_type: return
+    selected_metric_type = select_metric_from_list(available_metrics, root)
+    if not selected_metric_type:
+        root.destroy()
+        return
 
-    selected_area_type = select_area_type()
-    if not selected_area_type: return
+    selected_area_type = select_area_type(root)
+    if not selected_area_type:
+        root.destroy()
+        return
 
     all_room_stats = []
     file_count = 0
@@ -256,28 +265,29 @@ def main():
     df = df[cols_order]
 
     # Ask for save location
-    save_path_gui_root = tk.Tk()
-    save_path_gui_root.withdraw()
     initial_filename = f"Daylight_Stats_{selected_metric_type}_{selected_area_type}.xlsx"
     excel_file_path = filedialog.asksaveasfilename(
         title="Save Excel File",
         defaultextension=".xlsx",
         filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")],
-        initialfile=initial_filename
+        initialfile=initial_filename,
+        parent=root
     )
-    save_path_gui_root.destroy()
 
     # Export to Excel
     if excel_file_path:
         try:
             df.to_excel(excel_file_path, index=False, sheet_name=f"{selected_metric_type}_{selected_area_type}"[:31]) # Sheet name limit is 31 chars
-            messagebox.showinfo("Success", f"Stats exported to {excel_file_path}")
+            messagebox.showinfo("Success", f"Stats exported to {excel_file_path}", parent=root)
             print(f"\nStats successfully exported to {excel_file_path}")
         except Exception as e:
-            messagebox.showerror("Error", f"Could not save Excel file: {e}")
+            messagebox.showerror("Error", f"Could not save Excel file: {e}", parent=root)
             print(f"Error saving Excel file: {e}")
     else:
-        messagebox.showinfo("Info", "Save operation cancelled.")
+        messagebox.showinfo("Info", "Save operation cancelled.", parent=root)
+
+    # Clean up the root window
+    root.destroy()
 
 if __name__ == "__main__":
     main()
